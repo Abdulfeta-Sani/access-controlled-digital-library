@@ -35,39 +35,39 @@ Build a system that:
 
 * FastAPI (Python)
 * PyJWT (Authentication)
-* Custom RBAC Middleware
+* SQLAlchemy (ORM)
+* SQLite (Database)
+* Passlib (bcrypt hashing)
 
 ### Frontend
 
 * React (Vite) + TypeScript
 * TailwindCSS
 
-### Database
-
-* SQLite (Planned for next phase)
-
 ---
 
 ## 📂 Project Structure
 
-```
+```bash
 backend/
 │
 ├── app/
 │   ├── main.py
 │   ├── core/
 │   │   ├── config.py
-│   │   └── security.py
+│   │   ├── security.py
+│   │   ├── database.py
+│   │   └── deps.py
 │   │
 │   ├── models/
-│   │   └── user.py
+│   │   ├── user.py
+│   │   └── document.py
 │   │
 │   ├── api/
 │   │   └── routes/
-│   │       └── auth.py
-│   │
-│   └── middleware/
-│       └── rbac.py
+│   │       ├── auth.py
+│   │       ├── documents.py
+│   │       └── users.py
 │
 frontend/
 ```
@@ -78,105 +78,144 @@ frontend/
 
 ### 🔑 JWT Authentication
 
-* Users log in via:
+* Endpoint:
 
 ```
 POST /auth/login
 ```
 
-* The server returns a JWT token containing:
+* Accepts JSON body:
 
-  * `sub` → User email
-  * `role` → User role (admin, editor, viewer)
-  * `exp` → Expiration timestamp
+```json
+{
+  "email": "admin@example.com",
+  "password": "admin123"
+}
+```
+
+* Returns:
+
+```json
+{
+  "access_token": "...",
+  "token_type": "bearer",
+  "role": "admin"
+}
+```
+
+* Passwords are securely hashed using **bcrypt**
 
 ---
 
 ### 🛡️ RBAC (Role-Based Access Control)
 
-* Custom RBAC middleware is implemented
-* Each protected route defines allowed roles
-* Access is validated using the role inside the JWT payload
-
-Example:
+* Implemented using **FastAPI dependency injection**
+* Centralized logic via:
 
 ```python
-@rbac_required(["admin"])
+require_role(["admin", "editor"])
 ```
 
-* Unauthorized access returns:
+* Ensures:
 
-  * `403 Forbidden`
+  * Clean, reusable access control
+  * No duplication across endpoints
 
 ---
 
-## 🔐 Swagger Authentication Usage
+## 🔐 Security Improvements
 
-1. Open Swagger UI:
+* JWT configuration via environment variables:
+
+  * `SECRET_KEY`
+  * `ALGORITHM`
+  * `ACCESS_TOKEN_EXPIRE_MINUTES`
+* Proper `401 Unauthorized` responses for authentication failures
+* Strict Bearer token validation
+* Password hashing using bcrypt
+
+---
+
+## 📄 Document Model
+
+```json
+{
+  "id": 22,
+  "title": "System Architecture Guide",
+  "uploaded_by": "editor@example.com",
+  "role_access": ["admin", "editor", "viewer"],
+  "uploaded_at": "2026-03-13T09:30:00Z"
+}
+```
+
+---
+
+## 📌 API Endpoints
+
+### 🔐 Auth
+
+| Method | Endpoint    | Access |
+| ------ | ----------- | ------ |
+| POST   | /auth/login | Public |
+
+---
+
+### 📄 Documents
+
+| Method | Endpoint        | Access        |
+| ------ | --------------- | ------------- |
+| GET    | /documents      | Public        |
+| GET    | /documents/{id} | Public        |
+| POST   | /documents      | Admin, Editor |
+| DELETE | /documents/{id} | Admin         |
+
+---
+
+### 👥 Users
+
+| Method | Endpoint | Access |
+| ------ | -------- | ------ |
+| GET    | /users   | Admin  |
+
+---
+
+## 🧪 Testing via Swagger
+
+1. Open:
 
 ```
 http://127.0.0.1:8000/docs
 ```
 
-2. Click **Authorize 🔒**
-
-3. Enter token in this format:
+2. Login → get token
+3. Click **Authorize 🔒**
+4. Enter:
 
 ```
 Bearer <your_token>
 ```
 
-4. Access protected endpoints
-
----
-
-## 🧪 Test Users (Mock Data)
-
-| Email                                           | Password  | Role   |
-| ----------------------------------------------- | --------- | ------ |
-| [admin@example.com](mailto:admin@example.com)   | adminexample123  | Admin  |
-| [editor@example.com](mailto:editor@example.com) | editorexample123 | Editor |
-| [viewer@example.com](mailto:viewer@example.com) | viewerexample123 | Viewer |
-
----
-
-## 📌 Available Endpoints (Phase 2)
-
-| Method | Endpoint    | Description           |
-| ------ | ----------- | --------------------- |
-| POST   | /auth/login | User login (JWT)      |
-| GET    | /           | Health check          |
-| GET    | /protected  | Authenticated route   |
-| GET    | /admin-only | Admin-only test route |
-
 ---
 
 ## 📌 Current Status
 
-🟢 Phase 2 — Authentication & RBAC Completed
+🟢 Phase 3 — Backend Completed
 
-✔ FastAPI backend initialized
-✔ JWT authentication implemented
-✔ Swagger authorization enabled
-✔ Custom RBAC middleware created
-✔ Role-protected routes working
+✔ SQLite database integrated
+✔ Full document API implemented
+✔ JWT authentication secured
+✔ Password hashing enabled
+✔ RBAC implemented using dependencies
+✔ Public and protected endpoints correctly separated
 
 ---
 
 ## ⏭️ Next Phase
 
-➡ Phase 3:
+➡ Phase 4:
 
-* SQLite database integration
-* Document API (CRUD)
-* Full RBAC enforcement on endpoints
-
----
-
-## 📎 Notes
-
-* JWT is currently validated using a mock user database
-* SQLite and persistent storage will be added in the next phase
-* RBAC will be refactored into dependency-based enforcement for better scalability
+* React frontend (Vite + TypeScript + Tailwind)
+* JWT stored in memory
+* Role-based UI rendering
 
 ---
