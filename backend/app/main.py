@@ -4,11 +4,12 @@ from fastapi import Request
 from app.middleware.rbac import rbac_required
 from fastapi import Depends
 from app.core.security import get_current_user
-
+from app.core.database import Base, engine
 
 app = FastAPI()
 
 app.include_router(auth.router)
+Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def root():
