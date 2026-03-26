@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.models.document import Document
 from app.core.deps import get_db
-from app.core.security import get_current_user
+from app.core.security import get_current_user, require_role
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -11,22 +11,19 @@ def create_document(
     title: str,
     role_access: str,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(require_role(["admin", "editor"]))
 ):
-    if user["role"] not in ["admin", "editor"]:
-        raise HTTPException(status_code=403, detail="Not allowed")
-
-    doc = Document(
+    new_doc = Document(
         title=title,
         uploaded_by=user["sub"],
         role_access=role_access
     )
 
-    db.add(doc)
+    db.add(new_doc)
     db.commit()
-    db.refresh(doc)
+    db.refresh(new_doc)
 
-    return doc
+    return new_doc
 
 @router.get("/")
 def get_documents(
@@ -53,17 +50,14 @@ def get_document(
 def delete_document(
     id: int,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+    user=Depends(require_role(["admin"]))
 ):
-    if user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Admin only")
+    document = db.query(Document).filter(Document.id == id).first()
 
-    doc = db.query(Document).filter(Document.id == id).first()
-
-    if not doc:
+    if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    db.delete(doc)
+    db.delete(document)
     db.commit()
 
-    return {"message": "Document deleted"}
+    return {"message": "Document deleted successfully"}
