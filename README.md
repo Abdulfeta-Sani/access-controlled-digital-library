@@ -4,7 +4,7 @@
 
 This project is a full-stack digital library system that enforces **Role-Based Access Control (RBAC)** using **JWT authentication**.
 
-Users are assigned roles (**Admin, Editor, Viewer**), and each role determines what actions they can perform within the system.
+It allows users with different roles (**Admin, Editor, Viewer**) to interact with documents based on their permissions, ensuring secure and controlled access.
 
 ---
 
@@ -24,8 +24,8 @@ Build a system that:
 | Role   | Permissions                             |
 | ------ | --------------------------------------- |
 | Admin  | Manage users, upload & delete documents |
-| Editor | Upload documents, edit metadata         |
-| Viewer | View and download documents             |
+| Editor | Upload documents                        |
+| Viewer | View documents                          |
 
 ---
 
@@ -34,14 +34,15 @@ Build a system that:
 ### Backend
 
 * FastAPI (Python)
-* PyJWT (Authentication)
+* PyJWT (JWT Authentication)
 * SQLAlchemy (ORM)
 * SQLite (Database)
 * Passlib (bcrypt hashing)
 
 ### Frontend
 
-* React (Vite) + TypeScript
+* React (Vite)
+* TypeScript
 * TailwindCSS
 
 ---
@@ -68,8 +69,19 @@ backend/
 │   │       ├── auth.py
 │   │       ├── documents.py
 │   │       └── users.py
+│   │
+│   └── schemas/
+│       └── auth.py
 │
 frontend/
+│
+├── src/
+│   ├── context/
+│   │   └── AuthContext.tsx
+│   ├── pages/
+│   │   ├── Login.tsx
+│   │   └── Documents.tsx
+│   └── App.tsx
 ```
 
 ---
@@ -84,16 +96,16 @@ frontend/
 POST /auth/login
 ```
 
-* Accepts JSON body:
+* Request Body:
 
 ```json
 {
   "email": "admin@example.com",
-  "password": "admin123"
+  "password": "******"
 }
 ```
 
-* Returns:
+* Response:
 
 ```json
 {
@@ -116,33 +128,30 @@ POST /auth/login
 require_role(["admin", "editor"])
 ```
 
-* Ensures:
-
-  * Clean, reusable access control
-  * No duplication across endpoints
+* Ensures clean and reusable access control across endpoints
 
 ---
 
-## 🔐 Security Improvements
+## 🔐 Security Features
 
 * JWT configuration via environment variables:
 
   * `SECRET_KEY`
   * `ALGORITHM`
   * `ACCESS_TOKEN_EXPIRE_MINUTES`
-* Proper `401 Unauthorized` responses for authentication failures
+* Proper `401 Unauthorized` handling
 * Strict Bearer token validation
 * Password hashing using bcrypt
 
 ---
 
-## 📄 Document Model
+## 📄 Document Data Format
 
 ```json
 {
-  "id": 22,
-  "title": "System Architecture Guide",
-  "uploaded_by": "editor@example.com",
+  "id": 1,
+  "title": "System Design Guide",
+  "uploaded_by": "admin@example.com",
   "role_access": ["admin", "editor", "viewer"],
   "uploaded_at": "2026-03-13T09:30:00Z"
 }
@@ -152,7 +161,7 @@ require_role(["admin", "editor"])
 
 ## 📌 API Endpoints
 
-### 🔐 Auth
+### 🔐 Authentication
 
 | Method | Endpoint    | Access |
 | ------ | ----------- | ------ |
@@ -179,43 +188,69 @@ require_role(["admin", "editor"])
 
 ---
 
-## 🧪 Testing via Swagger
+## 🖥️ Frontend Features
 
-1. Open:
+* Login page with authentication
+* JWT stored securely in memory (React Context)
+* Document listing UI
+* Role-based UI rendering:
 
+  * Admin → can delete documents
+  * Editor → can upload documents
+  * Viewer → read-only access
+
+---
+
+## 🔄 Application Flow
+
+1. User logs in via frontend
+2. Backend returns JWT + role
+3. Frontend stores token in memory
+4. Requests include:
+
+   ```
+   Authorization: Bearer <token>
+   ```
+5. Backend validates token and enforces RBAC
+6. UI updates based on user role
+
+---
+
+## 🧪 Running the Project
+
+### Backend
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate   # Windows
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
-http://127.0.0.1:8000/docs
-```
 
-2. Login → get token
-3. Click **Authorize 🔒**
-4. Enter:
+---
 
-```
-Bearer <your_token>
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
 
 ## 📌 Current Status
 
-🟢 Phase 3 — Backend Completed
+🟢 Phase 4 — Full-Stack Integration Completed
 
-✔ SQLite database integrated
-✔ Full document API implemented
-✔ JWT authentication secured
-✔ Password hashing enabled
-✔ RBAC implemented using dependencies
-✔ Public and protected endpoints correctly separated
+✔ Backend fully implemented (Auth + RBAC + Database)
+✔ Frontend implemented (Login + Document UI)
+✔ Role-based UI behavior working
+✔ Secure authentication flow established
 
 ---
 
 ## ⏭️ Next Phase
 
-➡ Phase 4:
-
-* React frontend (Vite + TypeScript + Tailwind)
-* JWT stored in memory
-* Role-based UI rendering
-
----
+➡ Phase 5:
