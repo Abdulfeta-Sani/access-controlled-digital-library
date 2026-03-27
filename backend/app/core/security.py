@@ -1,10 +1,10 @@
 import jwt
+import bcrypt
 from datetime import datetime, timedelta
 from app.core.config import SECRET_KEY, ALGORITHM
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt import ExpiredSignatureError, InvalidTokenError
-from passlib.context import CryptContext
 
 
 def create_access_token(data: dict):
@@ -18,15 +18,16 @@ def verify_token(token: str):
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"),
+        hashed_password.encode("utf-8")
+    )
 
 security = HTTPBearer(auto_error=False)
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     if credentials is None:
