@@ -1,11 +1,8 @@
+import Login from "./pages/Login";
+
 function App() {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">
-        Digital Library Frontend
-      </h1>
-    </div>
-  )
+  return <Login />;
 }
 
 export default App
+
