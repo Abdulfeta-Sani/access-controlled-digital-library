@@ -342,12 +342,14 @@ function Documents() {
                             </button>
                           )}
 
-                          <button
-                            onClick={() => downloadDoc(doc.id, doc.title)}
-                            className="bg-blue-600 text-white px-3 py-1.5 text-sm rounded"
-                          >
-                            Download
-                          </button>
+                          {role === "viewer" && (
+                            <button
+                              onClick={() => downloadDoc(doc.id, doc.title)}
+                              className="bg-blue-600 text-white px-3 py-1.5 text-sm rounded"
+                            >
+                              Download
+                            </button>
+                          )}
 
                           {role === "admin" && (
                             <button
